@@ -6,6 +6,8 @@ You pick one of the 32 invited teams — or build a custom team from any five of
 the 160 players — then call the veto, set strats, manage economy and team
 mental through three Swiss stages into an eight-team playoff.
 
+**Play it:** https://frontalspy.github.io/cs2-major-manager/
+
 ## Run it
 
 ```bash
@@ -20,7 +22,8 @@ npm run format     # Biome auto-format
 
 ## Deploying to GitHub Pages
 
-`.github/workflows/deploy.yml` checks, tests, builds and deploys `dist/` on every push to `main`.
+`.github/workflows/deploy.yml` checks, tests, builds and deploys `dist/` on every push to `main` or
+`master`. The site is served at https://frontalspy.github.io/cs2-major-manager/.
 One-time setup: push the repo to GitHub, then **Settings → Pages → Source: GitHub Actions**.
 The build uses a relative `base` and hash routes (`#/match`), so it works from any repository sub-path
 with no 404 fallback.
