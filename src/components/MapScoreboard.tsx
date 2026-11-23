@@ -37,33 +37,90 @@ export function Score({ value }: { value: string }) {
 }
 
 function winnerName(score: string, aName: string, bName: string): string {
-  const [a, b] = score.split(":").map(Number);
+  const [a, b] = score.split(/[:–]/).map(Number);
   return a > b ? aName : bName;
 }
 
+function Tile({
+  name,
+  tone,
+  score,
+  winner,
+  selected,
+  onSelect,
+}: {
+  name: string;
+  tone: string;
+  score: string;
+  winner: string;
+  selected: boolean;
+  onSelect?: () => void;
+}) {
+  const body = (
+    <>
+      <span className={`mapname tone-${tone}`}>{name}</span>
+      <span className="mapscore">
+        <Score value={score} />
+      </span>
+      <span className="mapwin">{winner}</span>
+    </>
+  );
+  return (
+    <li className={selected ? "on" : undefined}>
+      {onSelect ? (
+        <button type="button" className="tilebtn" aria-pressed={selected} onClick={onSelect}>
+          {body}
+        </button>
+      ) : (
+        body
+      )}
+    </li>
+  );
+}
+
+// With `onSelect` the tiles become a toggle: an optional leading series tile (index null)
+// followed by one tile per map (index = position in `maps`).
 export function MapScoreboard({
   maps,
   aName,
   bName,
   compact = false,
+  series,
+  selected,
+  onSelect,
 }: {
   maps: MapScore[];
   aName: string;
   bName: string;
   compact?: boolean;
+  series?: string;
+  selected?: number | null;
+  onSelect?: (index: number | null) => void;
 }) {
   if (!maps.length) return null;
   return (
     <ul className={`mapscores ${compact ? "compact" : ""}`}>
+      {series ? (
+        <Tile
+          name="Series"
+          tone="mut"
+          score={series}
+          winner={winnerName(series, aName, bName)}
+          selected={selected === null}
+          onSelect={onSelect && (() => onSelect(null))}
+        />
+      ) : null}
       {maps.map((m, i) => (
         // the same map cannot repeat in a series, so the name is unique
-        <li key={`${m.map}-${i}`}>
-          <span className={`mapname tone-${MAP_TONE[m.map] ?? "mut"}`}>{m.map}</span>
-          <span className="mapscore">
-            <Score value={m.score} />
-          </span>
-          <span className="mapwin">{winnerName(m.score, aName, bName)}</span>
-        </li>
+        <Tile
+          key={`${m.map}-${i}`}
+          name={m.map}
+          tone={MAP_TONE[m.map] ?? "mut"}
+          score={m.score}
+          winner={winnerName(m.score, aName, bName)}
+          selected={selected === i}
+          onSelect={onSelect && (() => onSelect(i))}
+        />
       ))}
     </ul>
   );

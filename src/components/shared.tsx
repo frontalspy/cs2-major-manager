@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { asset } from "../engine/sim";
-import type { PlayerLine, Team } from "../types";
+import type { MapStats, PlayerLine, Team } from "../types";
 import { Icon } from "./Icon";
+import { MapScoreboard } from "./MapScoreboard";
 import { RoleTag } from "./Tags";
 
 export function LogoBadge({ team }: { team: Team }) {
@@ -85,37 +87,72 @@ export function HltvTable({ title, rows, mvpName }: { title: string; rows: Playe
   );
 }
 
-export function SeriesStats({
-  aggA,
-  aggB,
-  mvp,
-  maps,
-  aName,
-  bName,
-}: {
+interface SeriesScopeProps {
   aggA: PlayerLine[];
   aggB: PlayerLine[];
   mvp: PlayerLine | null | undefined;
-  maps?: { map: string; mvp?: PlayerLine | null }[];
+  mapStats?: MapStats[];
+  seriesScore: string;
   aName: string;
   bName: string;
-}) {
-  if (!aggA) return null;
+}
+
+// Series totals by default; in a multi-map series the map tiles toggle the tables to one map.
+// `compact` puts the two teams side by side and shrinks the tiles.
+export function SeriesScopeTables({
+  aggA,
+  aggB,
+  mvp,
+  mapStats,
+  seriesScore,
+  aName,
+  bName,
+  compact = false,
+}: SeriesScopeProps & { compact?: boolean }) {
+  const [mapIndex, setMapIndex] = useState<number | null>(null);
+  const maps = mapStats ?? [];
+  const picked = mapIndex === null ? undefined : maps[mapIndex];
+  const shownMvp = picked ? picked.mvp : mvp;
+  return (
+    <>
+      {maps.length ? (
+        <MapScoreboard
+          compact={compact}
+          maps={maps}
+          aName={aName}
+          bName={bName}
+          series={maps.length > 1 ? seriesScore : undefined}
+          selected={mapIndex}
+          onSelect={maps.length > 1 ? setMapIndex : undefined}
+        />
+      ) : null}
+      {shownMvp ? (
+        <div className="mvpbox">
+          <Icon name="star" /> <b>MVP: {shownMvp.name}</b> ({shownMvp.team}) — Rating{" "}
+          {shownMvp.rating.toFixed(2)} · {shownMvp.k}–{shownMvp.d} · ADR {shownMvp.adr}
+        </div>
+      ) : null}
+      <div
+        className={compact ? "grid" : undefined}
+        style={compact ? { gridTemplateColumns: "1fr 1fr", gap: 10 } : undefined}
+      >
+        <HltvTable title={aName} rows={picked ? picked.statsA : aggA} mvpName={shownMvp?.name} />
+        <HltvTable title={bName} rows={picked ? picked.statsB : aggB} mvpName={shownMvp?.name} />
+      </div>
+    </>
+  );
+}
+
+export function SeriesStats(props: SeriesScopeProps) {
+  if (!props.aggA) return null;
   return (
     <div className="card" style={{ marginTop: 12 }}>
       <h3 style={{ marginTop: 0 }}>HLTV-style scoreboard</h3>
-      {mvp ? (
-        <div className="mvpbox">
-          <Icon name="star" /> <b>MVP: {mvp.name}</b> ({mvp.team}) — Rating {mvp.rating.toFixed(2)} · {mvp.k}–
-          {mvp.d} · ADR {mvp.adr}
-        </div>
-      ) : null}
-      <HltvTable title={aName} rows={aggA} mvpName={mvp?.name} />
-      <HltvTable title={bName} rows={aggB} mvpName={mvp?.name} />
-      {maps ? (
+      <SeriesScopeTables {...props} />
+      {props.mapStats ? (
         <p className="small mut" style={{ marginTop: 8 }}>
           Per-map MVPs:{" "}
-          {maps
+          {props.mapStats
             .map((m) => m.map + ": " + (m.mvp ? m.mvp.name + " " + m.mvp.rating.toFixed(2) : "—"))
             .join(" · ")}
         </p>

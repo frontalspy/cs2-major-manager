@@ -83,6 +83,9 @@ export interface MapResult {
   mvp: PlayerLine;
 }
 
+// The per-map slice of a series that a scoreboard needs; MapResult satisfies it.
+export type MapStats = Pick<MapResult, "map" | "score" | "statsA" | "statsB" | "mvp">;
+
 export interface SeriesResult {
   winner: Team;
   loser: Team;
@@ -107,6 +110,8 @@ export interface DetailedResult {
   aggA: PlayerLine[];
   aggB: PlayerLine[];
   maps: string[];
+  // Absent on results saved before per-map stats were kept.
+  mapStats?: MapStats[];
   when: number;
 }
 

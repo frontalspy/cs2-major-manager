@@ -1,5 +1,5 @@
 import { addEventResult } from "./history";
-import { aggregateSeries, playedCount, seriesTarget, simMap, stratById } from "./sim";
+import { aggregateSeries, playedCount, seriesTarget, simMap, stratById, toMapStats } from "./sim";
 import type { GameStore } from "./store";
 
 // Interactive Match Centre actions for the user's own series: veto, strat,
@@ -123,6 +123,7 @@ export function playMap(game: GameStore): void {
       aggA: aggRes.aggA,
       aggB: aggRes.aggB,
       maps: cm.maps.map((m) => m.map + " " + m.score),
+      mapStats: toMapStats(cm.maps),
       when: Date.now(),
     });
     [a, b].forEach((t) => t.players.forEach((pl) => (pl.boost = 0)));

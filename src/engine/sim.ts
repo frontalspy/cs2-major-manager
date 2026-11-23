@@ -3,7 +3,7 @@
 // randomness, same edge cases; only the DOM access was removed.
 // The store (store.ts) owns the mutable tournament state and calls these.
 import { MAPS, STRATS, TEAM_DATA } from "../data/teams";
-import type { MapResult, PlayerLine, PlayerState, Team, VetoStep } from "../types";
+import type { MapResult, MapStats, PlayerLine, PlayerState, Team, VetoStep } from "../types";
 import { headToHead } from "./history";
 
 export function asset(path: string): string {
@@ -312,6 +312,11 @@ export function autoVetoMaps(a: Team, b: Team, format: string): { maps: string[]
     maps: [picks[0], picks[1], decider],
     vetoNote: `Bo3 veto: ${moveTxt} → ${picks[0]} (${moves[2].by.name}), ${picks[1]} (${moves[3].by.name}), decider ${decider}`,
   };
+}
+
+// Keeps only what a scoreboard needs, so saved results don't carry whole Team objects.
+export function toMapStats(maps: MapResult[]): MapStats[] {
+  return maps.map(({ map, score, statsA, statsB, mvp }) => ({ map, score, statsA, statsB, mvp }));
 }
 
 export function aggregateSeries(

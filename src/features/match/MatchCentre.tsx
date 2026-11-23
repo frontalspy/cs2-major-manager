@@ -1,5 +1,4 @@
 import { Icon } from "../../components/Icon";
-import { MapScoreboard, Score, seriesScoreText } from "../../components/MapScoreboard";
 import { SeriesStats } from "../../components/shared";
 import { MAP_TONE } from "../../components/Tags";
 import { MAPS, STRATS } from "../../data/teams";
@@ -38,6 +37,8 @@ export default function MatchCentre() {
       : "";
   const vetoLog = [...cm.banned, ...cm.picked].sort((x, y) => x.seq - y.seq);
   const nextMap = cm.mapList ? cm.mapList[cm.maps.length] : null;
+  const aMapWins = cm.maps.filter((m) => m.winner.id === a.id).length;
+  const seriesScore = `${aMapWins}–${cm.maps.length - aMapWins}`;
   const liveAgg = cm.maps.length ? aggregateSeries(cm.maps, a, b) : null;
 
   if (cm.done) {
@@ -48,22 +49,12 @@ export default function MatchCentre() {
           aggA={cm.aggA!}
           aggB={cm.aggB!}
           mvp={cm.mvp}
-          maps={cm.maps}
+          mapStats={cm.maps}
+          seriesScore={seriesScore}
           aName={a.name}
           bName={b.name}
         />
         <div className="card" style={{ marginTop: 12 }}>
-          <div className="score">
-            <Score
-              value={seriesScoreText(
-                cm.format,
-                cm.finalScore ?? "",
-                cm.maps.map((r) => ({ map: r.map, score: r.score }))
-              )}
-            />
-          </div>
-          <p style={{ textAlign: "center" }}>{cm.resultText}</p>
-          <MapScoreboard maps={cm.maps} aName={a.name} bName={b.name} />
           <div className="row" style={{ justifyContent: "center", flexWrap: "wrap" }}>
             <button
               className="btn"
@@ -255,7 +246,6 @@ export default function MatchCentre() {
         {vetoDone ? null : <span className="small mut"> Complete the veto first.</span>}
       </div>
 
-      <MapScoreboard maps={cm.maps} aName={a.name} bName={b.name} />
       <div className="log" style={{ marginTop: 12 }}>
         {cm.maps.length
           ? cm.maps
@@ -271,7 +261,8 @@ export default function MatchCentre() {
           aggA={liveAgg.aggA}
           aggB={liveAgg.aggB}
           mvp={liveAgg.mvp}
-          maps={cm.maps}
+          mapStats={cm.maps}
+          seriesScore={seriesScore}
           aName={a.name}
           bName={b.name}
         />

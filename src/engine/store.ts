@@ -36,6 +36,7 @@ import {
   simMap,
   teamBoostAvg,
   teamMentalAvg,
+  toMapStats,
   tourneyAvg,
   trendOf,
   vetoSteps,
@@ -292,6 +293,7 @@ export class GameStore {
       aggA: agg.aggA,
       aggB: agg.aggB,
       maps: maps.map((m) => m.map + " " + m.score),
+      mapStats: toMapStats(maps),
       when: Date.now(),
     });
     this.captureMyRun(

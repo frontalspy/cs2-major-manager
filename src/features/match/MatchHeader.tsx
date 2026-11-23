@@ -1,3 +1,4 @@
+import { Score, seriesScoreText } from "../../components/MapScoreboard";
 import { LogoBadge } from "../../components/shared";
 import type { CurrentMatch, Team } from "../../types";
 import { ScoutReport } from "./ScoutReport";
@@ -24,8 +25,21 @@ export function MatchHeader({ match: cm, a, b }: { match: CurrentMatch; a: Team;
             </div>
           </div>
         </div>
-        <div className="score" style={{ fontSize: 28 }}>
-          VS
+        <div style={{ textAlign: "center" }}>
+          <div className="score" style={{ fontSize: 28 }}>
+            VS
+          </div>
+          {cm.done ? (
+            <div className="score" style={{ fontSize: 44 }}>
+              <Score
+                value={seriesScoreText(
+                  cm.format,
+                  cm.finalScore ?? "",
+                  cm.maps.map((r) => ({ map: r.map, score: r.score }))
+                )}
+              />
+            </div>
+          ) : null}
         </div>
         <div className="row">
           <div style={{ textAlign: "right" }}>
@@ -38,6 +52,7 @@ export function MatchHeader({ match: cm, a, b }: { match: CurrentMatch; a: Team;
           <LogoBadge team={b} />
         </div>
       </div>
+      {cm.done && cm.resultText ? <p style={{ textAlign: "center" }}>{cm.resultText}</p> : null}
       <ScoutReport you={a} opponent={b} />
     </div>
   );

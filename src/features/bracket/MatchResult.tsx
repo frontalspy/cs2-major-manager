@@ -12,8 +12,18 @@ function findResult(id: number | undefined): DetailedResult | undefined {
 function ResultBody({ result }: { result: DetailedResult }) {
   return (
     <div>
-      <MapScoreboard maps={toMapScores(result.maps)} aName={result.a} bName={result.b} />
-      <SeriesStats aggA={result.aggA} aggB={result.aggB} mvp={result.mvp} aName={result.a} bName={result.b} />
+      {result.mapStats ? null : (
+        <MapScoreboard maps={toMapScores(result.maps)} aName={result.a} bName={result.b} />
+      )}
+      <SeriesStats
+        aggA={result.aggA}
+        aggB={result.aggB}
+        mvp={result.mvp}
+        mapStats={result.mapStats}
+        seriesScore={result.score}
+        aName={result.a}
+        bName={result.b}
+      />
     </div>
   );
 }
