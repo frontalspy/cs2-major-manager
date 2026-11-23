@@ -125,28 +125,68 @@ export function winProb(
   return Math.max(0.18, Math.min(0.82, pa));
 }
 
-export function genPlayerLine(pl: PlayerState, teamWon: boolean, team: Team): PlayerLine {
-  ensurePlayerState(team);
+function rollPerformance(pl: PlayerState): number {
   const base = pl.rating + (pl.boost || 0) + ((pl.mental - 72) / 100) * 0.45;
-  const swing = (Math.random() - 0.5) * 0.42;
-  let r = base + swing + (teamWon ? 0.07 : -0.04);
-  r = Math.max(0.42, Math.min(1.95, r));
-  const kills = Math.max(4, Math.round(r * 15 + Math.random() * 6 - 2));
-  const deaths = Math.max(5, Math.round(17 - (r - 0.9) * 7 + Math.random() * 4));
-  const adr = Math.round(52 + (r - 0.7) * 62 + Math.random() * 14);
-  const kast = Math.max(38, Math.min(96, Math.round(58 + (r - 0.8) * 38)));
-  return {
-    name: pl.name,
-    role: pl.role,
-    rating: +r.toFixed(2),
-    k: kills,
-    d: deaths,
-    diff: kills - deaths,
-    adr,
-    kast,
-    base: pl.rating,
-    mental: pl.mental,
-  };
+  return Math.max(0.5, Math.min(1.9, base + (Math.random() - 0.5) * 0.42));
+}
+
+// Splits an exact integer total across weights (largest-remainder rounding).
+function distribute(total: number, weights: number[]): number[] {
+  const sum = weights.reduce((acc, w) => acc + w, 0);
+  const raw = weights.map((w) => (w / sum) * total);
+  const out = raw.map(Math.floor);
+  let left = total - out.reduce((acc, n) => acc + n, 0);
+  raw
+    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+    .sort((x, y) => y.frac - x.frac)
+    .forEach(({ i }) => {
+      if (left-- > 0) out[i]++;
+    });
+  return out;
+}
+
+// A team kills roughly 3.8 enemies in rounds it wins and 1.9 in rounds it loses.
+function teamKills(roundsWon: number, roundsLost: number): number {
+  return Math.max(5, Math.round(roundsWon * 3.8 + roundsLost * 1.9 + (Math.random() - 0.5) * 6));
+}
+
+// Player lines for one team. Team kill/death totals come from the scoreline; each
+// player's share follows a rolled performance, and the final rating blends that
+// performance with the K/D the player actually ended up with.
+export function genTeamLines(
+  team: Team,
+  teamKillTotal: number,
+  teamDeathTotal: number,
+  rounds: number
+): PlayerLine[] {
+  ensurePlayerState(team);
+  const perf = team.players.map(rollPerformance);
+  const kills = distribute(
+    teamKillTotal,
+    perf.map((r) => r ** 1.5)
+  );
+  const deaths = distribute(
+    teamDeathTotal,
+    perf.map((r) => r ** -0.7)
+  );
+  return team.players.map((pl, i) => {
+    const kpr = kills[i] / rounds;
+    const dpr = deaths[i] / rounds;
+    const fromKd = 1 + 1.2 * (kpr - 0.7) - (dpr - 0.7);
+    const r = Math.max(0.42, Math.min(1.95, 0.4 * perf[i] + 0.6 * fromKd));
+    return {
+      name: pl.name,
+      role: pl.role,
+      rating: +r.toFixed(2),
+      k: kills[i],
+      d: deaths[i],
+      diff: kills[i] - deaths[i],
+      adr: Math.max(20, Math.round(25 + kpr * 80 + Math.random() * 10 - 5)),
+      kast: Math.max(38, Math.min(96, Math.round(58 + (r - 0.8) * 38))),
+      base: pl.rating,
+      mental: pl.mental,
+    };
+  });
 }
 
 export function applyMapToHistory(team: Team, lines: PlayerLine[], won: boolean): void {
@@ -174,19 +214,18 @@ export function simMap(
 ): MapResult {
   const p = winProb(a, b, map, strat);
   const aWin = Math.random() < p;
-  const loserRounds = Math.floor(Math.random() * 10) + 1;
   const ot = Math.random() < 0.12;
-  const score = aWin
-    ? ot
-      ? "16:" + (12 + Math.floor(Math.random() * 3))
-      : "13:" + loserRounds
-    : ot
-      ? 12 + Math.floor(Math.random() * 3) + ":16"
-      : loserRounds + ":13";
+  const winnerRounds = ot ? 16 : 13;
+  const loserRounds = ot ? 12 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * 10) + 1;
+  const score = aWin ? `${winnerRounds}:${loserRounds}` : `${loserRounds}:${winnerRounds}`;
+  const roundsA = aWin ? winnerRounds : loserRounds;
+  const roundsB = aWin ? loserRounds : winnerRounds;
+  const killsA = teamKills(roundsA, roundsB);
+  const killsB = teamKills(roundsB, roundsA);
   const winner = aWin ? a : b;
   const loser = aWin ? b : a;
-  const statsA = a.players.map((pl) => genPlayerLine(pl, aWin, a));
-  const statsB = b.players.map((pl) => genPlayerLine(pl, !aWin, b));
+  const statsA = genTeamLines(a, killsA, killsB, roundsA + roundsB);
+  const statsB = genTeamLines(b, killsB, killsA, roundsA + roundsB);
   statsA.sort((x, y) => y.rating - x.rating);
   statsB.sort((x, y) => y.rating - x.rating);
   const all = [
