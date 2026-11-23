@@ -218,7 +218,7 @@ export default function MatchCentre() {
         </div>
         <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
           <label className="small">
-            Economy call{" "}
+            Buy strategy{" "}
             <select style={{ width: "auto" }} value={cm.eco} onChange={(e) => setEco(store, e.target.value)}>
               <option>Full buy</option>
               <option>Force buy</option>

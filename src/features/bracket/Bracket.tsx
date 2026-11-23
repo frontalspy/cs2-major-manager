@@ -40,39 +40,30 @@ export default function Bracket() {
     const b = store.teamById(m.b)!;
     return (
       <div className="matchbox" key={m.label}>
-        <LogoSm team={a} />
-        {a.name} vs <LogoSm team={b} />
-        {b.name} <FormatPill format={m.format || ""} />
-        <br />
+        <div className="mteam">
+          <LogoSm team={a} />
+          <span className={m.winner === a.id ? "win" : undefined}>{a.name}</span>
+        </div>
+        <div className="mteam">
+          <LogoSm team={b} />
+          <span className={m.winner === b.id ? "win" : undefined}>{b.name}</span>{" "}
+          <FormatPill format={m.format || ""} />
+        </div>
         {m.done ? (
-          <>
+          <div className="mresult">
             <b>
               {store.teamById(m.winner!)?.name} won <Score value={m.score ?? ""} />
             </b>
-            {m.mapsInfo ? (
-              <>
-                <br />
-                <span className="small mut">{m.mapsInfo}</span>
-              </>
-            ) : null}
+            {m.mapsInfo ? <div className="small mut">{m.mapsInfo}</div> : null}
             {m.mvp ? (
-              <>
-                <br />
-                <span className="small">
-                  <Icon name="star" /> MVP: {m.mvp.name} {m.mvp.rating.toFixed(2)}
-                </span>
-              </>
+              <div className="small">
+                <Icon name="star" /> MVP: {m.mvp.name} {m.mvp.rating.toFixed(2)}
+              </div>
             ) : null}
-            <MatchDetails resultId={m.resultId} />
-            {m.vetoNote ? (
-              <>
-                <br />
-                <span className="small mut">{m.vetoNote}</span>
-              </>
-            ) : null}
-          </>
+            <MatchDetails resultId={m.resultId} vetoNote={m.vetoNote} />
+          </div>
         ) : (
-          <span className="mut">Not played</span>
+          <div className="mresult mut">Not played</div>
         )}
       </div>
     );
@@ -123,52 +114,67 @@ export default function Bracket() {
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Playoffs</h3>
           <div className="bracket">
-            <div>
+            <div className="bracketcol">
               <b>Quarter-finals · Bo3</b>
-              {store.playoffs.matches.map((m) => mbox(m))}
+              <div className="bracketmatches">{store.playoffs.matches.map((m) => mbox(m))}</div>
             </div>
-            <div>
+            <div className="bracketcol">
               <b>Semi-finals · Bo3</b>
-              {store.playoffs.semis ? (
-                store.playoffs.semis.map((m) => mbox(m))
-              ) : (
-                <p className="mut small">TBD</p>
-              )}
-            </div>
-            <div>
-              <b>Grand Final · Bo5</b>
-              {store.playoffs.final ? mbox(store.playoffs.final) : <p className="mut small">TBD</p>}
-              <b>3rd-place decider · Bo3</b>
-              {store.playoffs.third ? mbox(store.playoffs.third) : null}
-            </div>
-            <div>
-              <b>Champion</b>
-              <div className="matchbox" style={{ textAlign: "center", fontSize: 18 }}>
-                {store.champion ? (
-                  <>
-                    {store.champion.logo ? (
-                      <img
-                        className="logomd"
-                        src={asset(store.champion.logo)}
-                        alt={`${store.champion.name} logo`}
-                      />
-                    ) : null}
-                    <Icon name="trophy" /> {store.champion.name}
-                  </>
+              <div className="bracketmatches">
+                {store.playoffs.semis ? (
+                  store.playoffs.semis.map((m) => mbox(m))
                 ) : (
-                  "—"
+                  <p className="mut small">TBD</p>
                 )}
               </div>
-              {runnerUp ? (
-                <p style={{ margin: "8px 0 4px", fontSize: 16 }}>
-                  <Icon name="medal" /> <b>2nd:</b> {runnerUp.name}
-                </p>
-              ) : null}
-              {store.third ? (
-                <p className="small mut" style={{ margin: "4px 0" }}>
-                  <b>3rd:</b> {store.third.name}
-                </p>
-              ) : null}
+            </div>
+            <div className="bracketcol">
+              <b>Finals</b>
+              <div className="bracketmatches centre">
+                <div>
+                  <b className="small mut">Grand Final · Bo5</b>
+                  {store.playoffs.final ? mbox(store.playoffs.final) : <p className="mut small">TBD</p>}
+                </div>
+                {store.playoffs.third ? (
+                  <div>
+                    <b className="small mut">3rd-place decider · Bo3</b>
+                    {mbox(store.playoffs.third)}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="bracketcol">
+              <b>Champion</b>
+              <div className="bracketmatches centre">
+                <div>
+                  <div className="matchbox" style={{ textAlign: "center", fontSize: 18 }}>
+                    {store.champion ? (
+                      <>
+                        {store.champion.logo ? (
+                          <img
+                            className="logomd"
+                            src={asset(store.champion.logo)}
+                            alt={`${store.champion.name} logo`}
+                          />
+                        ) : null}
+                        <Icon name="trophy" /> {store.champion.name}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </div>
+                  {runnerUp ? (
+                    <p style={{ margin: "8px 0 4px", fontSize: 16 }}>
+                      <Icon name="medal" /> <b>2nd:</b> {runnerUp.name}
+                    </p>
+                  ) : null}
+                  {store.third ? (
+                    <p className="small mut" style={{ margin: "4px 0" }}>
+                      <b>3rd:</b> {store.third.name}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
         </div>

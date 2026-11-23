@@ -150,30 +150,54 @@ function teamKills(roundsWon: number, roundsLost: number): number {
   return Math.max(5, Math.round(roundsWon * 3.8 + roundsLost * 1.9 + (Math.random() - 0.5) * 6));
 }
 
-// Player lines for one team. Team kill/death totals come from the scoreline; each
-// player's share follows a rolled performance, and the final rating blends that
-// performance with the K/D the player actually ended up with.
+// How a team's map is shared out: balanced (everyone lifts together), one standout,
+// or two or three standouts. Returns the extra performance each player gets.
+function standoutBoosts(perf: number[]): number[] {
+  const roll = Math.random();
+  const count = roll < 0.4 ? 0 : roll < 0.75 ? 1 : roll < 0.9 ? 2 : 3;
+  const boosts = perf.map(() => 0);
+  const pool = perf.map((_, i) => i);
+  for (let n = 0; n < count; n++) {
+    const weights = pool.map((i) => perf[i] ** 2);
+    let pick = Math.random() * weights.reduce((acc, w) => acc + w, 0);
+    let at = 0;
+    while (at < pool.length - 1 && (pick -= weights[at]) > 0) at++;
+    boosts[pool[at]] = 0.3 + Math.random() * 0.4;
+    pool.splice(at, 1);
+  }
+  return boosts;
+}
+
+// Player lines for one team. Team kill/death totals come from the scoreline. Each
+// player's share follows a rolled performance (lifted for the team that dominated,
+// dragged down for the one that was stomped, plus any standouts), and the final
+// rating blends that performance with the K/D the player actually ended up with.
 export function genTeamLines(
   team: Team,
   teamKillTotal: number,
   teamDeathTotal: number,
-  rounds: number
+  ownRounds: number,
+  oppRounds: number
 ): PlayerLine[] {
   ensurePlayerState(team);
-  const perf = team.players.map(rollPerformance);
+  const rounds = ownRounds + oppRounds;
+  const dominance = (ownRounds - oppRounds) / rounds;
+  const base = team.players.map(rollPerformance);
+  const boosts = standoutBoosts(base);
+  const perf = base.map((r, i) => r + boosts[i] + 0.3 * dominance);
   const kills = distribute(
     teamKillTotal,
-    perf.map((r) => r ** 1.5)
+    perf.map((r) => Math.max(0.2, r) ** 1.6)
   );
   const deaths = distribute(
     teamDeathTotal,
-    perf.map((r) => r ** -0.7)
+    perf.map((r) => Math.max(0.2, r) ** -0.5)
   );
   return team.players.map((pl, i) => {
     const kpr = kills[i] / rounds;
     const dpr = deaths[i] / rounds;
-    const fromKd = 1 + 1.2 * (kpr - 0.7) - (dpr - 0.7);
-    const r = Math.max(0.42, Math.min(1.95, 0.4 * perf[i] + 0.6 * fromKd));
+    const fromKd = 1 + 1.4 * (kpr - 0.7) - 1.2 * (dpr - 0.7);
+    const r = Math.max(0.42, Math.min(2.4, 0.3 * perf[i] + 0.7 * fromKd));
     return {
       name: pl.name,
       role: pl.role,
@@ -224,8 +248,8 @@ export function simMap(
   const killsB = teamKills(roundsB, roundsA);
   const winner = aWin ? a : b;
   const loser = aWin ? b : a;
-  const statsA = genTeamLines(a, killsA, killsB, roundsA + roundsB);
-  const statsB = genTeamLines(b, killsB, killsA, roundsA + roundsB);
+  const statsA = genTeamLines(a, killsA, killsB, roundsA, roundsB);
+  const statsB = genTeamLines(b, killsB, killsA, roundsB, roundsA);
   statsA.sort((x, y) => y.rating - x.rating);
   statsB.sort((x, y) => y.rating - x.rating);
   const all = [

@@ -28,14 +28,15 @@ function ResultBody({ result }: { result: DetailedResult }) {
   );
 }
 
-// Expandable scoreboard (maps, player ratings, MVP) for a simulated series.
-export function MatchDetails({ resultId }: { resultId: number | undefined }) {
+// Expandable scoreboard (maps, player ratings, MVP) for a simulated series, with the veto beneath it.
+export function MatchDetails({ resultId, vetoNote }: { resultId: number | undefined; vetoNote?: string }) {
   const result = findResult(resultId);
   if (!result) return null;
   return (
     <details className="mdetail">
       <summary className="small">Scoreboard</summary>
       <ResultBody result={result} />
+      {vetoNote ? <p className="small mut">{vetoNote}</p> : null}
     </details>
   );
 }

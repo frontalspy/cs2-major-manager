@@ -576,16 +576,49 @@ select:focus {
 }
 .bracket {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  gap: 24px;
+  overflow-x: auto;
+}
+.bracketcol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bracketmatches {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 18px;
+}
+.bracketmatches.centre {
+  justify-content: center;
+  gap: 32px;
 }
 .matchbox {
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: var(--rad);
-  padding: 10px;
-  margin: 6px 0 10px;
+  padding: 12px 14px;
+  margin: 6px 0 0;
   font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mteam {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mresult {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .swiss {
   display: grid;
@@ -917,6 +950,11 @@ select:focus {
   }
   .bracket {
     grid-template-columns: 1fr;
+  }
+  .bracketmatches,
+  .bracketmatches.centre {
+    justify-content: flex-start;
+    gap: 14px;
   }
 }
 @media (max-width: 800px) {

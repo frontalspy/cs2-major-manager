@@ -23,6 +23,20 @@ export function initialRecent(teamName: string): RecentResult[] {
 const VRS_BY_TEAM = new Map(TEAM_DATA.map((t) => [t.name, t.vrs]));
 const VRS_SCALE = 600;
 
+// A team arriving on a run of wins over Major teams (e.g. a just-won event) gets one
+// extra point of form, even when earlier losses cancel the surprise score.
+const HOT_STREAK = 4;
+
+function winStreakVsMajorTeams(recent: RecentResult[]): number {
+  let streak = 0;
+  for (const r of recent) {
+    if (!VRS_BY_TEAM.has(r.opp)) continue;
+    if (!r.won) break;
+    streak++;
+  }
+  return streak;
+}
+
 export function initialForm(ownVrs: number, recent: RecentResult[]): number {
   let surprise = 0;
   for (const r of recent.slice(0, 6)) {
@@ -31,7 +45,8 @@ export function initialForm(ownVrs: number, recent: RecentResult[]): number {
     const expected = 1 / (1 + 10 ** (-(ownVrs - oppVrs) / VRS_SCALE));
     surprise += (r.won ? 1 : 0) - expected;
   }
-  return Math.max(-3, Math.min(3, Math.round(surprise * 2)));
+  const streakBonus = winStreakVsMajorTeams(recent) >= HOT_STREAK ? 1 : 0;
+  return Math.max(-3, Math.min(3, Math.round(surprise * 2) + streakBonus));
 }
 
 export function daysBeforeEvent(date: string): number {

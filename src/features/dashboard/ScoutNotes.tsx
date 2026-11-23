@@ -10,7 +10,7 @@ export function ScoutNotes() {
       </h3>
       <p className="small mut">
         Every map is rolled from VRS, HLTV Rating 3.0, map win rate, recent results and head-to-head, event
-        form, your veto, strat and economy call, and mental. Favourites win more often; upsets happen.
+        form, your veto, strat and buy strategy, and mental. Favourites win more often; upsets happen.
       </p>
       <p className="small mut" style={{ marginTop: 8 }}>
         <b style={{ color: "#fff" }}>Data:</b> HLTV snapshot, 22 Nov 2026 —{" "}
